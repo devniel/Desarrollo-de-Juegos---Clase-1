@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+/*
+1ra clase - Ejemplo de C# en html5
+Daniel Flores, an apprentice.
+*/
+
+
+<html>
+<head>
+
+<style>
+	#workarea {
+		border:1px solid #CCC;
+		position:absolute;
+		top:50%;
+		left:50%;
+		box-shadow:0px 0px 10px rgba(0,0,0,0.7);
+		cursor: none !important;
+	}
+</style>
+
+<script>
+
+/*
+ * Objeto MOUSE -  Lógica para obtener su estado
+ */
+
+var Mouse = {
+	moving : false,
+	pressing : false,
+	releasing : false,
+	properties : null
+}
+
+window.addEventListener("mouseover",function(e){
+ 	Mouse.over = true;
+ 	Mouse.properties = e;
+ },true);
+
+ window.addEventListener("mousemove",function(e){
+ 	Mouse.moving = true;
+ 	Mouse.properties = e;
+ },true);
+
+ window.addEventListener("mousedown",function(e){
+ 	Mouse.releasing = false;
+ 	Mouse.pressing = true;
+ 	Mouse.properties = e;
+ },true);
+
+ window.addEventListener("mouseup",function(e){
+ 	Mouse.pressing = false;
+ 	Mouse.releasing = true;
+ 	Mouse.properties = e;
+ },true);
+
+
+window.setInterval(function(){
+	Mouse.moving = false;
+},10);
+
+/*
+ * Clase CURSOR
+ */
+
+var Cursor = function(){
+	
+	/*
+	*	En C# son vectores 2D.
+	*/
+
+	this.x = null;
+	this.y = null;
+	this.size = null;
+	this.texture = null;
+
+	var self = this;
+
+	/*
+	 * Contructor
+ 	 */
+
+   __construct = function() {
+
+       self.x = 0;
+       self.y = 0;
+       self.size = 20;
+
+       /*
+        * Cargando sprite de cursor
+        */
+
+       var sprite = new Image();
+       sprite.width = this.size;
+       sprite.height = this.size;
+		sprite.onload = function(){
+		    self.texture = sprite;
+		};
+		sprite.src = 'sprites/cursor.png';
+   }();
+
+   /*
+    * Método para actualizar el cursor
+    */
+
+   	this.update = function() {
+   		console.log(Mouse.moving);
+   		if(Mouse.pressing){
+   			console.log("PRESSSING --------->" , Mouse.properties);
+   			var e = Mouse.properties;
+   			switch (e.which) {
+		        case 1:
+		            console.log('Left mouse button pressed');
+		            if(this.size < 25) this.size++;
+		            break;
+		        case 2:
+		            console.log('Middle mouse button pressed');
+		            break;
+		        case 3:
+		            console.log('Right mouse button pressed');
+		            break;
+		        default:
+		            console.log('You have a strange mouse');
+		    }
+   		}else{
+   			if(this.size > 20){
+   				this.size--;
+   			}
+   		}
+   	}
+
+
+   	/*
+   	 * Método para dibujar el cursor
+   	 */
+
+   	 this.draw = function(canvas){
+   	 	//console.log(Mouse.properties);
+   	 	var pos_x = Mouse.properties.layerX;
+   	 	var pos_y = Mouse.properties.layerY;
+
+   	 	var ctx = canvas.getContext("2d");
+
+   	 	console.log("TEXTURA : " ,this.texture);
+   	 	ctx.drawImage(this.texture, pos_x - this.size/2, pos_y - this.size/2, this.size, this.size);
+   	 }
+
+}
+
+/*
+ * Controles
+ */
+
+function setMouseControls(obj){
+
+ obj.addEventListener("mouseover",function(e){
+ 	//console.log("MOUSE OVER",e);
+ },false);
+
+ obj.addEventListener("mousemove",function(e){
+ 	//console.log("MOUSE MOVE",e);
+ },false);
+
+ obj.addEventListener("mousedown",function(e){
+ 	//console.log("MOUSE DOWN",e);
+ },false);
+
+ obj.addEventListener("mouseup",function(e){
+ 	//console.log("MOUSE UP",e);
+ },false);
+
+ obj.addEventListener("mousepress",function(e){
+ 	//console.log("MOUSE PRESS",e);
+ },false);
+
+}
+
+var start = function(){
+
+	/*
+	 * Obtener workarea
+	 */
+
+	var workarea = document.getElementById("workarea");
+
+	/*
+	 * Obtener contexto
+	 */
+
+	var ctx = workarea.getContext("2d");
+
+	/*
+	 * Establecer controles para workarea
+	 */
+
+	setMouseControls(workarea);
+
+	/*
+	 *	Cambiar dimensiones de workarea [Puede separarse en una clase aparte]
+	 */
+
+	workarea.width = 400;
+	workarea.height = 254;
+	workarea.style.width = "400px";
+	workarea.style.height ="254px";
+	workarea.style.marginLeft = "-200px";
+	workarea.style.marginTop ="-127px";
+
+	var cursor = new Cursor();
+
+	/*
+	 * Cargar fondo de workarea
+	 */
+
+	//workarea.style.background = "url('backgrounds/arena.png')";
+
+
+	/*
+	 * Función update para refrescar estados del juego
+	 */
+
+	var update = function(canvas){
+	    // Check for collisions, states, whatever else is needed
+		cursor.update();
+	}
+
+	/*
+	 * Función render para dibujar el juego junto a estados en el workarea
+	 */
+
+	var render = function(canvas){
+		var ctx = canvas.getContext("2d");
+		ctx.clearRect(0,0,canvas.width,canvas.height); //Borrar todo
+
+
+		// Dibujar background
+		var bg = new Image();
+		bg.onload = function(){
+		    ctx.drawImage(bg,0,0);
+		    // Dibujar cursor
+			cursor.draw(canvas);
+		};
+		bg.src = 'backgrounds/arena.png';
+
+
+	};
+
+	/*
+	 * GAME LOOP
+	 */
+
+	/*
+	 * Función main que ejecuta la actualización y el renderizado
+	 */
+
+	var cursor = new Cursor();
+
+	var gameLoop = function(){
+		update(workarea);
+		render(workarea);
+		//console.log("Corriendo ...");
+	};
+
+	setInterval(gameLoop,1000/60);
+
+}
+
+window.onload = start;
+
+</script>
+</head>
+<body>
+
+<canvas id="workarea">
+</canvas>
+
+</body>
+</html>
